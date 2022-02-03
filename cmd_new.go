@@ -68,6 +68,7 @@ type formulaDownload struct {
 
 var formulaTmpl = template.Must(template.New("formulaTmpl").Parse(tmpl))
 
+var archNameRe = regexp.MustCompile("(amd64|arm64)")
 var osNameRe = regexp.MustCompile("(darwin|linux)")
 
 func getDownloads(assets []github.ReleaseAsset) ([]formulaDownload, error) {
@@ -75,7 +76,8 @@ func getDownloads(assets []github.ReleaseAsset) ([]formulaDownload, error) {
 	for _, asset := range assets {
 		u := asset.GetBrowserDownloadURL()
 		fname := path.Base(u)
-		if !strings.Contains(fname, "amd64") {
+		archName := archNameRe.FindString(fname)
+		if archName == "" {
 			continue
 		}
 		osName := osNameRe.FindString(fname)
@@ -90,7 +92,7 @@ func getDownloads(assets []github.ReleaseAsset) ([]formulaDownload, error) {
 			URL:    u,
 			SHA256: digest,
 			OS:     osName,
-			Arch:   "amd64",
+			Arch:   archName,
 		})
 	}
 	if len(downloads) == 0 {
